@@ -12,15 +12,18 @@ public class Result : MonoBehaviour
     void Start()
     {
         string t;
-        if (GameController.isHighScore)
+        int highScore = SaveLoadScore(false);
+        
+        if (highScore<GameController.score)
         {
             t = "High Score !!\n        " + GameController.score.ToString();
+            SaveLoadScore(true);
         }
         else
         {
             t = "Score:\n        " + GameController.score.ToString()
                 + "\n High Score:\n        "
-                + GameController.SaveLoadScore(false).ToString();
+                + highScore.ToString();
         }
         text.GetComponent<Text>().text = t;
     }
@@ -29,5 +32,20 @@ public class Result : MonoBehaviour
     void Update()
     {
 
+    }
+
+    public int SaveLoadScore(bool save)
+    {
+        int sc = 0;
+        string savePath = "ScoreData";
+        if (save)
+        {
+            PlayerPrefs.SetInt(savePath, GameController.score);
+        }
+        else
+        {
+            sc = PlayerPrefs.GetInt(savePath);
+        }
+        return sc;
     }
 }

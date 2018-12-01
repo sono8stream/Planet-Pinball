@@ -4,13 +4,10 @@ using System.Collections;
 public class PlanetController : MonoBehaviour {
 
     GameObject sun;
-    public static float coefficient = 0.00006f;
+    public float coefficient = 0.00006f;
+    public GameObject Explosion { get; private set; }
+    public GameController controller;
     Rigidbody rigidBody;
-    GameObject explosion;
-    public GameObject Explosion
-    {
-        get { return explosion; }
-    }
     GameObject flash;
     bool isLooping = false;
     float adjRange = 1;
@@ -21,8 +18,8 @@ public class PlanetController : MonoBehaviour {
     void Start()
     {
         sun = GameObject.Find("Sun");
-        explosion = Instantiate(Resources.Load<GameObject>("Explosion"));
-        explosion.SetActive(false);
+        Explosion = Instantiate(Resources.Load<GameObject>("Explosion"));
+        Explosion.SetActive(false);
         flash = Instantiate(Resources.Load<GameObject>("Flash"));
         flash.transform.SetParent(transform);
         flash.SetActive(false);
@@ -48,10 +45,10 @@ public class PlanetController : MonoBehaviour {
                 ForceMode.Force);
             if (!passed)
             {
-                GameController.score += (int)(100 * GameController.rate);
-                GameController.UpdateScore();
-                GameController.rate += 0.1f * transform.localScale.magnitude;
-                GameController.UpdateRate(true);
+                GameController.score += (int)(100 * controller.rate);
+                controller.UpdateScore();
+                controller.rate += 0.1f * transform.localScale.magnitude;
+                controller.UpdateRate(true);
                 GameObject g = Instantiate(flash);
                 g.SetActive(true);
                 g.transform.SetParent(transform);
@@ -70,19 +67,9 @@ public class PlanetController : MonoBehaviour {
         else if (transform.position.y > sun.transform.position.y)
         {
             isLooping = true;
-            /*Vector3 direction = sun.transform.position - transform.position;
-            float distance = direction.magnitude;
-            float p = Mathf.Sqrt(
-                    coefficient * sun.GetComponent<Rigidbody>().mass / distance);
-            if (rigidBody.velocity.magnitude < p + adjRange &&
-                p - adjRange < rigidBody.velocity.magnitude)
-            {
-                GameController.score += 100;
-                GameController.UpdateScore();
-            }*/
         }
-        else if (GameController.iniPosY + 2 < transform.position.y
-            && transform.position.y < GameController.iniPosY + 3)
+        else if (controller.iniPosY + 2 < transform.position.y
+            && transform.position.y < controller.iniPosY + 3)
         {
             GetComponent<Collider>().enabled = true;
         }
@@ -111,18 +98,18 @@ public class PlanetController : MonoBehaviour {
 
     void OnCollisionEnter(Collision c)
     {
-        //GameController.score -= (int)(200 * transform.localScale.magnitude);
+        //controller.score -= (int)(200 * transform.localScale.magnitude);
         GameController.score -= 1000;
         if (GameController.score < 0)
         {
             GameController.score = 0;
         }
-        GameController.UpdateScore(false);
-        GameController.rate = 1;
-        GameController.UpdateRate(false);
-        GameController.SingExplode();
-        explosion.SetActive(true);
-        explosion.transform.position = transform.position;
+        controller.UpdateScore(false);
+        controller.rate = 1;
+        controller.UpdateRate(false);
+        controller.SingExplode();
+        Explosion.SetActive(true);
+        Explosion.transform.position = transform.position;
         Destroy(gameObject);
     }
 }

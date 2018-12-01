@@ -12,42 +12,33 @@ public class GameController : MonoBehaviour
     GameObject tmText;
     [SerializeField]
     GameObject[] cursors;
-    static AudioClip explode, plus, shot;
-    static GameObject scText, rtText;
-    static GameObject flash;
-    static GameObject flashMi;
+    [SerializeField]
+    AudioClip explode, plus, shot;
+    [SerializeField]
+    GameObject scText, rtText;
+    [SerializeField]
+    GameObject flash;
+    [SerializeField]
+    GameObject flashMi;
     int genNo = 0;
-    static string savePath;
-    public static bool isHighScore;
     public static int score = 0;
-    float limitTime = 63;
+    float limitTime = 11;
     float startTime = 0;
     float nowTime = 0;
-    public static float rate = 1;
+    public float rate = 1;
     GameObject tarObj;
     Vector3 downPos;
     float iniPosX = 0;
-    public static float iniPosY = -6;
+    public float iniPosY = -6;
     float powScale = 1f;
     bool isHorizontal;
-    static AudioSource audioSource;
+    AudioSource audioSource;
 
     // Use this for initialization
     void Start()
     {
         score = 0;
         rate = 1;
-        isHighScore = false;
-        savePath = "ScoreData";
-        explode = Resources.Load<AudioClip>("bomb1");
-        plus = Resources.Load<AudioClip>("plus3");
-        shot = Resources.Load<AudioClip>("shot1");
-        scText = GameObject.Find("Canvas").transform.FindChild("Score").gameObject;
-        rtText = GameObject.Find("Canvas").transform.FindChild("Rate").gameObject;
-        flash = Instantiate(Resources.Load<GameObject>("ScorePlus"));
-        flash.GetComponent<EffectController>().enabled = false;
-        flashMi = Instantiate(Resources.Load<GameObject>("ScoreMinus"));
-        flashMi.GetComponent<EffectController>().enabled = false;
         startTime = Time.time;
         SetPlanet();
         audioSource = GetComponent<AudioSource>();
@@ -60,9 +51,6 @@ public class GameController : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))//スワイプしてplanetを生成、移動
             {
-                /*Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit = new RaycastHit();
-                if (Physics.Raycast(ray, out hit))*/
                 Vector2 touchPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 if (touchPos.y < -5)
                 {
@@ -109,7 +97,7 @@ public class GameController : MonoBehaviour
                     if (Mathf.Abs(pow) > 1f)
                     {
                         tarObj.GetComponent<Rigidbody>().velocity = Vector2.up * pow;
-                        tarObj.GetComponent<Collider>().enabled = false;
+
                         GameObject g = Instantiate(tarObj.GetComponent<PlanetController>().Explosion);
                         g.transform.position = tarObj.transform.position;
                         g.SetActive(true);                        
@@ -127,6 +115,9 @@ public class GameController : MonoBehaviour
         tarObj = Instantiate(planets[genNo]);
         tarObj.transform.position = new Vector2(iniPosX, iniPosY);
         tarObj.transform.SetParent(GameObject.Find("Planets").transform);
+        tarObj.GetComponent<Collider>().enabled = false;
+        tarObj.GetComponent<PlanetController>().controller = this;
+
         genNo = Random.Range(0, planets.GetLength(0));
         Debug.Log(genNo);
         SetCursors(true,true);
@@ -198,12 +189,10 @@ public class GameController : MonoBehaviour
         float point = 2 - Mathf.Abs(vel - idealV) / idealV;
         SpriteRenderer s = cursors[2].GetComponent<SpriteRenderer>();
         s.enabled = true;
-        Debug.Log(idealV);
-        Debug.Log(point);
         cursors[2].transform.localScale = Vector3.one * point;
     }
 
-    public static void UpdateRate(bool up)
+    public void UpdateRate(bool up)
     {
         string t = "×" + rate.ToString("F2");
         rtText.GetComponent<Text>().text = t;
@@ -228,16 +217,11 @@ public class GameController : MonoBehaviour
         tmText.GetComponent<Text>().text = t.PadLeft(2, '0');
         if (leftTime < 0)
         {
-            if (score > SaveLoadScore(false))
-            {
-                SaveLoadScore(true);
-                isHighScore = true;
-            }
             SceneManager.LoadScene(2);
         }
     }
 
-    public static void UpdateScore(bool up = true)
+    public void UpdateScore(bool up = true)
     {
         string t = score.ToString();
         scText.GetComponent<Text>().text = t.PadLeft(6, '0');
@@ -254,22 +238,8 @@ public class GameController : MonoBehaviour
         g.GetComponent<EffectController>().enabled = true;
     }
 
-    public static void SingExplode()
+    public void SingExplode()
     {
         audioSource.PlayOneShot(explode);
-    }
-
-    public static int SaveLoadScore(bool save)
-    {
-        int sc = 0;
-        if(save)
-        {
-            PlayerPrefs.SetInt(savePath, score);
-        }
-        else
-        {
-            sc = PlayerPrefs.GetInt(savePath);
-        }
-        return sc;
     }
 }

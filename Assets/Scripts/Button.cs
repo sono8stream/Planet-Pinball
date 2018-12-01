@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class Button : MonoBehaviour {
@@ -20,18 +19,22 @@ public class Button : MonoBehaviour {
     public void Play()
     {
         GetComponent<AudioSource>().PlayOneShot(se);
-        SceneManager.LoadScene(1);
+        transform.Find("Play").Find("Text")
+            .GetComponent<ButtonScript>().UpdatePeriod(3);
+        LoadManager.Find().LoadScene(1);
     }
 
     public void Exit()
     {
         GetComponent<AudioSource>().PlayOneShot(se);
+        transform.Find("Exit").Find("Text")
+            .GetComponent<ButtonScript>().UpdatePeriod(3);
         Application.Quit();
     }
 
     public void Quit()
     {
         GetComponent<AudioSource>().PlayOneShot(se);
-        SceneManager.LoadScene(0);
+        LoadManager.Find().LoadScene(0);
     }
 }
