@@ -38,8 +38,9 @@ public class LoadManager : MonoBehaviour {
 
     public void LoadScene(int index)
     {
-        if (index < 0 || SceneManager.sceneCount < index)
+        if (index < 0 || SceneManager.sceneCountInBuildSettings < index)
         {
+            Debug.Log(index);
             return;
         }
         StartCoroutine(LoadSceneCoroutine(index));
@@ -51,18 +52,19 @@ public class LoadManager : MonoBehaviour {
         {
             sceneIndex = -1;
         }
-        AsyncOperation async = SceneManager.LoadSceneAsync(index);
-        async.allowSceneActivation = false;    // シーン遷移を待つ
+        Debug.Log("transit");
         image.enabled = true;
-        while (!FadeIn() || async.progress < 0.9f)
+        while (FadeIn())
         {
             yield return new WaitForEndOfFrame();
         }
-        async.allowSceneActivation = true;    // シーン遷移許可
-        yield return new WaitForSeconds(0.2f);
+        AsyncOperation async = SceneManager.LoadSceneAsync(index);
+        yield return async;
+        //yield return new WaitForSeconds(0.2f);
 
-        while (!FadeOut())
+        while (FadeOut())
         {
+            Debug.Log(image.color);
             yield return new WaitForEndOfFrame();
         }
         image.enabled = false;
@@ -73,11 +75,13 @@ public class LoadManager : MonoBehaviour {
         if (fadeWaiter.Wait())
         {
             fadeWaiter.Initialize();
-            return true;
+            Color c = image.color;
+            image.color = new Color(c.r, c.g, c.b, 1);
+            return false;
         }
 
         image.color += Color.black * fadeSpeed;
-        return false;
+        return true;
     }
 
     bool FadeOut()
@@ -85,10 +89,12 @@ public class LoadManager : MonoBehaviour {
         if (fadeWaiter.Wait())
         {
             fadeWaiter.Initialize();
-            return true;
+            Color c = image.color;
+            image.color = new Color(c.r, c.g, c.b, 0);
+            return false;
         }
 
         image.color -= Color.black * fadeSpeed;
-        return false;
+        return true;
     }
 }

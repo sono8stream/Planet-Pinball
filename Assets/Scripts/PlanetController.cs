@@ -5,10 +5,10 @@ public class PlanetController : MonoBehaviour {
 
     GameObject sun;
     public float coefficient = 0.00006f;
-    public GameObject Explosion { get; private set; }
+    public GameObject explosion;
+    public GameObject flash;
     public GameController controller;
     Rigidbody rigidBody;
-    GameObject flash;
     bool isLooping = false;
     float adjRange = 1;
     bool passed = false;
@@ -18,11 +18,6 @@ public class PlanetController : MonoBehaviour {
     void Start()
     {
         sun = GameObject.Find("Sun");
-        Explosion = Instantiate(Resources.Load<GameObject>("Explosion"));
-        Explosion.SetActive(false);
-        flash = Instantiate(Resources.Load<GameObject>("Flash"));
-        flash.transform.SetParent(transform);
-        flash.SetActive(false);
         rigidBody = GetComponent<Rigidbody>();
     }
 
@@ -49,12 +44,13 @@ public class PlanetController : MonoBehaviour {
                 controller.UpdateScore();
                 controller.rate += 0.1f * transform.localScale.magnitude;
                 controller.UpdateRate(true);
+                /*
                 GameObject g = Instantiate(flash);
                 g.SetActive(true);
                 g.transform.SetParent(transform);
                 g.transform.localPosition = Vector3.zero;
-                g.transform.localScale = new Vector3(0.1f, 0.1f, 1);
-                g.GetComponent<EffectController>().enabled = true;
+                g.transform.localScale = Vector3.one;
+                */
                 passed = true;
             }
             else if ((transform.position.y < sun.transform.position.y&&above)
@@ -108,8 +104,8 @@ public class PlanetController : MonoBehaviour {
         controller.rate = 1;
         controller.UpdateRate(false);
         controller.SingExplode();
-        Explosion.SetActive(true);
-        Explosion.transform.position = transform.position;
+        GameObject explodeEffect=Instantiate(explosion);
+        explodeEffect.transform.position = transform.position;
         Destroy(gameObject);
     }
 }

@@ -17,12 +17,17 @@ public class GameController : MonoBehaviour
     [SerializeField]
     GameObject scText, rtText;
     [SerializeField]
-    GameObject flash;
+    GameObject explodeOrigin;
     [SerializeField]
-    GameObject flashMi;
+    GameObject flashOrigin;
+    [SerializeField]
+    GameObject flashMinusOrigin;
+    [SerializeField]
+    float limitTime = 11;
+    [SerializeField]
+    Text tutorialText;
     int genNo = 0;
     public static int score = 0;
-    float limitTime = 11;
     float startTime = 0;
     float nowTime = 0;
     public float rate = 1;
@@ -32,7 +37,10 @@ public class GameController : MonoBehaviour
     public float iniPosY = -6;
     float powScale = 1f;
     bool isHorizontal;
-    AudioSource audioSource;
+    SoundPlayer player;
+    LoadManager loader;
+    bool onEnd = false;
+    bool onMoveLeft, onMoveRight;
 
     // Use this for initialization
     void Start()
@@ -41,18 +49,27 @@ public class GameController : MonoBehaviour
         rate = 1;
         startTime = Time.time;
         SetPlanet();
-        audioSource = GetComponent<AudioSource>();
+        player = SoundPlayer.Find();
+        loader = LoadManager.Find();
+        UpdateTutorialMessage();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!CameraController.istouchingUI)
+        if (onEnd) return;
+
+        if (CameraController.istouchingUI)
         {
+            if (onMoveLeft) MoveLeft();
+            if (onMoveRight) MoveRight();
+        }
+        else { 
             if (Input.GetMouseButtonDown(0))//スワイプしてplanetを生成、移動
             {
                 Vector2 touchPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                if (touchPos.y < -5)
+                
+                if (touchPos.y < -4)
                 {
                     isHorizontal = true;
                     SetCursors(false, true);
@@ -72,8 +89,12 @@ public class GameController : MonoBehaviour
                 if (isHorizontal)
                 {
                     Vector3 cPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                    tarObj.transform.position = new Vector3(cPos.x, iniPosY, 0);
-                    SetCursors(false, true);
+                    if (Mathf.Abs(cPos.x) <= 4)
+                    {
+                        tarObj.transform.position 
+                            = new Vector3(cPos.x, iniPosY, 0);
+                        SetCursors(false, true);
+                    }
                 }
                 else
                 {
@@ -88,22 +109,25 @@ public class GameController : MonoBehaviour
                     isHorizontal = false;
                     SetCursors(true, true);
                     SetPowCursor(true, true);
+                    UpdateTutorialMessage();
                 }
                 else
                 {
                     float pow = (downPos.y
                         - Camera.main.ScreenToWorldPoint(Input.mousePosition).y)
                         * powScale;
-                    if (Mathf.Abs(pow) > 1f)
+                    if (pow > 1f)
                     {
                         tarObj.GetComponent<Rigidbody>().velocity = Vector2.up * pow;
 
-                        GameObject g = Instantiate(tarObj.GetComponent<PlanetController>().Explosion);
+                        GameObject g = Instantiate(explodeOrigin);
                         g.transform.position = tarObj.transform.position;
-                        g.SetActive(true);                        
-                        audioSource.PlayOneShot(shot);
+                        g.SetActive(true);            
+                        player.PlaySE(shot);
                         SetPlanet();
                     }
+                    SetCursors(true, true);
+                    SetPowCursor(true, true);
                 }
             }
         }
@@ -116,7 +140,10 @@ public class GameController : MonoBehaviour
         tarObj.transform.position = new Vector2(iniPosX, iniPosY);
         tarObj.transform.SetParent(GameObject.Find("Planets").transform);
         tarObj.GetComponent<Collider>().enabled = false;
-        tarObj.GetComponent<PlanetController>().controller = this;
+        PlanetController planet = tarObj.GetComponent<PlanetController>();
+        planet.controller = this;
+        planet.explosion = explodeOrigin;
+        planet.flash = flashOrigin;
 
         genNo = Random.Range(0, planets.GetLength(0));
         Debug.Log(genNo);
@@ -186,28 +213,53 @@ public class GameController : MonoBehaviour
         float vel = (downPos.y
                 - Camera.main.ScreenToWorldPoint(Input.mousePosition).y)
                 * powScale;
+        if (Mathf.Abs(vel - idealV) > idealV)
+        {
+            vel = vel < idealV ? 0.01f : idealV * 2;
+        }
         float point = 2 - Mathf.Abs(vel - idealV) / idealV;
         SpriteRenderer s = cursors[2].GetComponent<SpriteRenderer>();
         s.enabled = true;
         cursors[2].transform.localScale = Vector3.one * point;
     }
 
+    void UpdateTutorialMessage()
+    {
+        if (score > 0)
+        {
+            tutorialText.transform.parent.gameObject.SetActive(false);
+        }
+        else
+        {
+            tutorialText.transform.parent.gameObject.SetActive(true);
+            if (Mathf.Abs(tarObj.transform.position.x) < 1)
+            {
+                tutorialText.text = "惑星をドラッグして位置を変えよう";
+            }
+            else
+            {
+                tutorialText.text = "上から下に引っ張って惑星を飛ばそう";
+            }
+        }
+    }
+
     public void UpdateRate(bool up)
     {
         string t = "×" + rate.ToString("F2");
         rtText.GetComponent<Text>().text = t;
+        /*
         GameObject g;
         if (up)
         {
-            g = Instantiate(flash);
-            g.transform.position = new Vector3(-4f, 4.2f, 0);
+            g = Instantiate(flashOrigin);
+            g.transform.position = new Vector3(2f, 7.2f, 0);
         }
         else
         {
-            g = Instantiate(flashMi);
-            g.transform.position = new Vector3(-0.5f, 4.2f, 0);
+            g = Instantiate(flashMinusOrigin);
+            g.transform.position = new Vector3(2f, 7.2f, 0);
         }
-        g.GetComponent<EffectController>().enabled = true;
+        */
     }
 
     void UpdateTime()
@@ -217,7 +269,9 @@ public class GameController : MonoBehaviour
         tmText.GetComponent<Text>().text = t.PadLeft(2, '0');
         if (leftTime < 0)
         {
-            SceneManager.LoadScene(2);
+            onEnd = true;
+            Debug.Log("end");
+            loader.LoadScene(2);
         }
     }
 
@@ -228,18 +282,41 @@ public class GameController : MonoBehaviour
         GameObject g;
         if (up)
         {
-            g = Instantiate(flash);
-            audioSource.PlayOneShot(plus);
+            g = Instantiate(flashOrigin);
+            g.transform.position = new Vector3(2f, 6.2f, 0);
+            player.PlaySE(plus);
         }
         else
         {
-            g = Instantiate(flashMi);
+            g = Instantiate(flashMinusOrigin);
+            g.transform.position = new Vector3(2f, 6.2f, 0);
         }
-        g.GetComponent<EffectController>().enabled = true;
     }
 
     public void SingExplode()
     {
-        audioSource.PlayOneShot(explode);
+        player.PlaySE(explode);
+    }
+
+    public void SwitchMoveLeft(bool on)
+    {
+        onMoveLeft = on;
+    }
+
+    public void MoveLeft()
+    {
+        if (tarObj.transform.position.x < -4f) return;
+        tarObj.transform.position += Vector3.left * 0.01f;
+    }
+
+    public void SwitchMoveRight(bool on)
+    {
+        onMoveRight = on;
+    }
+
+    public void MoveRight()
+    {
+        if (tarObj.transform.position.x >4f) return;
+        tarObj.transform.position += Vector3.right * 0.01f;
     }
 }

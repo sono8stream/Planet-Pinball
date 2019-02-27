@@ -88,6 +88,11 @@ public class SoundPlayer : MonoBehaviour
         }
     }
 
+    public static SoundPlayer Find()
+    {
+        return GameObject.Find(objectName).GetComponent<SoundPlayer>();
+    }
+
     ///enum名からresources.loadしたかったけど遅そうなのでやめた
     /*void LoadBGMs()
     {

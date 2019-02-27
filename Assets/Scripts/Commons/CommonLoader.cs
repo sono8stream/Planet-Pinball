@@ -22,9 +22,13 @@ public class CommonLoader : MonoBehaviour
         {
             gameObject.name = loadedName;
             LoadCommons();
-            DontDestroyOnLoad(gameObject);
-            Destroy(this);
         }
+    }
+
+    private void Start()
+    {
+        DontDestroyOnLoad(gameObject);
+        Destroy(this);
     }
 
     void LoadCommons()
