@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 71b8bbb939a1efb419524c2506ee6d3a
+guid: 53bc4a5ee9285f4c5ae7659fc15dff88
 labels:
 - gpsr
 PluginImporter:
@@ -7,8 +7,11 @@ PluginImporter:
   serializedVersion: 2
   iconMap: {}
   executionOrder: {}
+  defineConstraints: []
   isPreloaded: 0
   isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
   platformData:
   - first:
       Android: Android
