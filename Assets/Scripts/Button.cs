@@ -35,7 +35,8 @@ public class Button : MonoBehaviour {
         }
         else
         {
-            UpdateLife(life - 1);
+            UpdateLife(life);
+            //UpdateLife(life - 1);
         }
     }
 
