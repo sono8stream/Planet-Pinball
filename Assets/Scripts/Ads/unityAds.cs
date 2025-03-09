@@ -20,6 +20,7 @@ public class unityAds : MonoBehaviour {
 
     public void ShowAd()
     {
+        /*
         buttonScript.PlayEnterSE();
         string adId = "rewardedVideo";
         if (Advertisement.IsReady(adId))
@@ -29,6 +30,7 @@ public class unityAds : MonoBehaviour {
                 = new ShowOptions { resultCallback = ShowAdResult };
             Advertisement.Show(adId, options);
         }
+        */
     }
 
     void ShowAdResult(ShowResult result)
